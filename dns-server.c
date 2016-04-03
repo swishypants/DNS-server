@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <string.h>
+
 #include "dns.h"
 
 #define BUFFER_SIZE 2048
@@ -19,6 +20,13 @@ int CreateSocket(int port){
 	return fd;
 }
 
+struct node {
+  char* addr;
+  char* name; 
+  struct node *next;
+};
+
+typedef struct node host;
 
 int main(int argc, char **argv) {
 
@@ -27,6 +35,7 @@ int main(int argc, char **argv) {
 	int recvlen; // # of bytes received
 	int serverSocket; // the socket receiving data
 	char *hostfile = NULL;
+	FILE *host_fp; 
 	
 	struct sockaddr_in myaddr;
 	struct sockaddr_in remaddr;
@@ -86,6 +95,53 @@ int main(int argc, char **argv) {
 		perror("Cannot bind socket\n");
 		return 0;
 	}
+	
+//parsing the host file	
+	host * curr, * head;
+	char * addr;
+	char * name;
+	head = NULL;
+	host_fp=fopen(hostfile,"r");
+    if (host_fp == 0)
+    {
+        //null pointer returned - failure
+        perror("Canot open host file\n");
+        exit(-1);
+    }else{
+    
+    char line[256];
+
+	//iterate through every line of hosts.txt
+    while (fgets(line, sizeof(line), host_fp)) {
+    	if(line[0] == '#' || line[0] == '\n' || strlen(line)==0)
+        	continue; 
+        addr = strtok(line, " \t\n");
+        name = strtok(NULL, " \t\n");
+        //printf("%s\n", addr);
+        //printf("%s\n", host);
+
+        curr = (host *)malloc(sizeof(host));
+        curr->name = malloc(strlen(name)+1);
+        strcpy(curr->name, name);
+        curr->addr = malloc(strlen(addr)+1);
+        strcpy(curr->addr, addr);
+        curr->next = head;
+        head = curr;
+    }
+    curr= head;
+    
+    
+ 	host * temp=head;
+	while(temp!=NULL){
+		printf("%s\n", temp->addr);
+        printf("%s\n", temp->name);
+    	temp=temp->next;
+	}
+    
+    
+    fclose(host_fp);
+    }
+
 
 	char* qname;
 	dns_header* dns_h = NULL;
@@ -129,6 +185,9 @@ int main(int argc, char **argv) {
 		char* queryName = malloc(strlen(qname_fin)+1);
 		queryName = strcpy(queryName, qname_fin);
 	//	free(qname_fin);
+		
+		
+		
 // Started step 4 here
 		strncpy(&buf[sizeof(dns_header) + j + 1 + sizeof(dns_question)],qname_buf, j);
 //		*(qname_buf + j) = '0';
