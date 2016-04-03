@@ -125,15 +125,23 @@ int main(int argc, char **argv) {
 				j++;
 				c = *(qname_buf + j);
 		}
-		*(qname_fin + j) = '\0';
-		char* queryName = malloc(strlen(qname_fin));
+	//	*(qname_buf + j) = '\0';
+		char* queryName = malloc(strlen(qname_fin)+1);
 		queryName = strcpy(queryName, qname_fin);
-		free(qname_fin);
+	//	free(qname_fin);
 // Started step 4 here
-		dns_a = (dns_rrhdr*)&buf[sizeof(dns_header) + j + j + 1 + sizeof(dns_question)];
+		strncpy(&buf[sizeof(dns_header) + j + 1 + sizeof(dns_question)],qname_buf, j);
+//		*(qname_buf + j) = '0';
+		dns_q = (dns_question*)&buf[sizeof(dns_header) + j + 1];
+		dns_a = (dns_rrhdr*)&buf[sizeof(dns_header) + j + j + sizeof(dns_question)];
 		dns_a->type = htons(1);
 		dns_a->class = htons(1);
-		dns_a->data_len = 32;
+		dns_a->data_len = htons(4);
+		dns_a->ttl = htons(30);
+		unsigned int answer = htons(10002);
+		
+		int g = sizeof(dns_header) + j + j + sizeof(dns_question) + sizeof(dns_rrhdr);;
+		buf[g] = answer;
 		dns_h->qr = htons(1);
 		dns_h->aa = htons(1);
 		dns_h->tc = 0;
@@ -141,10 +149,10 @@ int main(int argc, char **argv) {
 		dns_h->rcode = 0; // 0 for no error, or 3 for name error (not found in hostsfile.txt
 		dns_h->an_count = htons(1); // Set an_count to 1 if having an answer. Else, 0 if it's not in host file.
 
-
-
+		
 		printf("qname_fin: %s\n", queryName);
-		printf("qtype: %d\n", dns_q->qtype);
+		printf("question_header: %d\n", dns_q->qtype);
+		printf("question_header: %d\n", dns_q->qclass);
 		
 		printf("DNS access test: \n");
 		printf("---------------------\n");
@@ -152,6 +160,7 @@ int main(int argc, char **argv) {
 		printf("qr_code:  %d\n", htons(dns_h->qr));
 		printf("qd_count:  %d\n", htons(dns_h->qd_count));
 		printf("rd:  %d\n", dns_h->rd);
+		sendto(serverSocket, buf, g+sizeof(answer), 0, (struct sockaddr *)&remaddr, addrlen);
 		printf("an_count:  %d\n", htons(dns_h->an_count));
 		printf("ns_count:  %d\n", htons(dns_h->ns_count));
 		printf("ar_count:  %d\n", htons(dns_h->ar_count));
