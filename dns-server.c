@@ -153,9 +153,9 @@ int main(int argc, char **argv) {
 		recvlen = recvfrom(serverSocket, buf, BUFFER_SIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
 		printf("Received %d bytes \n", recvlen);
 		if(recvlen > 0){
-			buf[recvlen] = 0;
+			buf[recvlen] = '0';
 		}
-		dns_h = (dns_header*)&buf;
+		dns_h = (dns_header*)buf;
 		unsigned char* qname_buf = (unsigned char *)&buf[sizeof(dns_header)];
 		char c = *qname_buf;
 		char* qname_fin = malloc(256);
@@ -182,27 +182,31 @@ int main(int argc, char **argv) {
 				c = *(qname_buf + j);
 		}
 	//	*(qname_buf + j) = '\0';
-		char* queryName = malloc(strlen(qname_fin)+1);
-		queryName = strcpy(queryName, qname_fin);
+		j++;
+		printf("J === %d\n",j);
+		unsigned char* queryName = malloc(j+1);
+		queryName = strncpy(queryName, qname_fin,j+1);
+		*(queryName+j+1) = '\0';
 	//	free(qname_fin);
 		
 		
 		
 // Started step 4 here
-		strncpy(&buf[sizeof(dns_header) + j + 1 + sizeof(dns_question)],qname_buf, j);
+		char* test =strncpy(&buf[sizeof(dns_header) + j + sizeof(dns_question)],qname_buf, j+1);
 //		*(qname_buf + j) = '0';
-		dns_q = (dns_question*)&buf[sizeof(dns_header) + j + 1];
+		dns_q = (dns_question*)&buf[sizeof(dns_header) + j];
 		dns_a = (dns_rrhdr*)&buf[sizeof(dns_header) + j + j + sizeof(dns_question)];
 		dns_a->type = htons(1);
 		dns_a->class = htons(1);
 		dns_a->data_len = htons(4);
-		dns_a->ttl = htons(30);
-		unsigned int answer = htons(10002);
+		dns_a->ttl = 30;
+		unsigned int answer = htons(0);
 		
-		int g = sizeof(dns_header) + j + j + sizeof(dns_question) + sizeof(dns_rrhdr);;
+		int g = sizeof(dns_header) + j + j + sizeof(dns_question) + sizeof(dns_rrhdr);
 		buf[g] = answer;
-		dns_h->qr = htons(1);
-		dns_h->aa = htons(1);
+//		buf[g+4]='0';
+		dns_h->qr = 1;
+		dns_h->aa = 1;
 		dns_h->tc = 0;
 		dns_h->ra = 0;
 		dns_h->rcode = 0; // 0 for no error, or 3 for name error (not found in hostsfile.txt
@@ -210,6 +214,7 @@ int main(int argc, char **argv) {
 
 		
 		printf("qname_fin: %s\n", queryName);
+		printf("test: %s\n", test);
 		printf("question_header: %d\n", dns_q->qtype);
 		printf("question_header: %d\n", dns_q->qclass);
 		
