@@ -22,11 +22,11 @@ int CreateSocket(int port){
 
 struct node {
   char* addr;
-  char* host; 
+  char* name; 
   struct node *next;
 };
 
-typedef struct node host_addr_pair;
+typedef struct node host;
 
 int main(int argc, char **argv) {
 
@@ -97,9 +97,9 @@ int main(int argc, char **argv) {
 	}
 	
 //parsing the host file	
-	host_addr_pair * curr, * head;
+	host * curr, * head;
 	char * addr;
-	char * host;
+	char * name;
 	head = NULL;
 	host_fp=fopen(hostfile,"r");
     if (host_fp == 0)
@@ -116,13 +116,13 @@ int main(int argc, char **argv) {
     	if(line[0] == '#' || line[0] == '\n' || strlen(line)==0)
         	continue; 
         addr = strtok(line, " \t\n");
-        host = strtok(NULL, " \t\n");
+        name = strtok(NULL, " \t\n");
         //printf("%s\n", addr);
         //printf("%s\n", host);
 
-        curr = (host_addr_pair *)malloc(sizeof(host_addr_pair));
-        curr->host = malloc(strlen(host)+1);
-        strcpy(curr->host, host);
+        curr = (host *)malloc(sizeof(host));
+        curr->name = malloc(strlen(name)+1);
+        strcpy(curr->name, name);
         curr->addr = malloc(strlen(addr)+1);
         strcpy(curr->addr, addr);
         curr->next = head;
@@ -130,14 +130,14 @@ int main(int argc, char **argv) {
     }
     curr= head;
     
-    /*
- 	host_addr_pair * temp=head;
+    
+ 	host * temp=head;
 	while(temp!=NULL){
 		printf("%s\n", temp->addr);
-        printf("%s\n", temp->host);
+        printf("%s\n", temp->name);
     	temp=temp->next;
 	}
-    */
+    
     
     fclose(host_fp);
     }
