@@ -87,9 +87,10 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
-	dns_header* dns_h = NULL;
 	char* qname;
+	dns_header* dns_h = NULL;
 	dns_question* dns_q = NULL;
+	dns_rrhdr* dns_a = NULL;
 
 	while(1){
 		printf("Waiting on port %d\n", port);
@@ -128,8 +129,19 @@ int main(int argc, char **argv) {
 		char* queryName = malloc(strlen(qname_fin));
 		queryName = strcpy(queryName, qname_fin);
 		free(qname_fin);
+// Started step 4 here
+		dns_a = (dns_rrhdr*)&buf[sizeof(dns_header) + j + j + 1 + sizeof(dns_question)];
+		dns_a->type = htons(1);
+		dns_a->class = htons(1);
+		dns_a->data_len = 32;
+		dns_h->qr = htons(1);
+		dns_h->aa = htons(1);
+		dns_h->tc = 0;
+		dns_h->ra = 0;
+		dns_h->rcode = 0; // 0 for no error, or 3 for name error (not found in hostsfile.txt
+		dns_h->an_count = htons(1); // Set an_count to 1 if having an answer. Else, 0 if it's not in host file.
 
-		dns_q = (dns_question*)&buf[sizeof(dns_header) + j+1];
+
 
 		printf("qname_fin: %s\n", queryName);
 		printf("qtype: %d\n", dns_q->qtype);
