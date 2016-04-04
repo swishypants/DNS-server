@@ -44,4 +44,5 @@ typedef struct __attribute__ ((__packed__)) {
 	unsigned short class;
 	unsigned int ttl;
 	unsigned short data_len;
+	unsigned int ip;
 } dns_rrhdr;

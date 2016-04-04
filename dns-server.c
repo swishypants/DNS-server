@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
 		recvlen = recvfrom(serverSocket, buf, BUFFER_SIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
 		printf("Received %d bytes \n", recvlen);
 		if(recvlen > 0){
-			buf[recvlen] = '0';
+//			buf[recvlen] = '0';
 		}
 		dns_h = (dns_header*)buf;
 		unsigned char* qname_buf = (unsigned char *)&buf[sizeof(dns_header)];
@@ -192,18 +192,18 @@ int main(int argc, char **argv) {
 		
 		
 // Started step 4 here
-		char* test =strncpy(&buf[sizeof(dns_header) + j + sizeof(dns_question)],qname_buf, j+1);
+		char* test =strncpy(&buf[sizeof(dns_header) + j + sizeof(dns_question)],qname_buf, j);
 //		*(qname_buf + j) = '0';
+	//	buf[sizeof(dns_header)+j+sizeof(dns_question)+j+1] = '0';
 		dns_q = (dns_question*)&buf[sizeof(dns_header) + j];
 		dns_a = (dns_rrhdr*)&buf[sizeof(dns_header) + j + j + sizeof(dns_question)];
 		dns_a->type = htons(1);
 		dns_a->class = htons(1);
 		dns_a->data_len = htons(4);
-		dns_a->ttl = 30;
-		unsigned int answer = htons(0);
+		unsigned int ip= htonl(256);
 		
 		int g = sizeof(dns_header) + j + j + sizeof(dns_question) + sizeof(dns_rrhdr);
-		buf[g] = answer;
+		dns_a->ip = ip;
 //		buf[g+4]='0';
 		dns_h->qr = 1;
 		dns_h->aa = 1;
@@ -217,22 +217,20 @@ int main(int argc, char **argv) {
 		printf("test: %s\n", test);
 		printf("question_header: %d\n", dns_q->qtype);
 		printf("question_header: %d\n", dns_q->qclass);
-		
+		printf("dns_a->type: %d\n",dns_a->type);
+		printf("dns_a->data_len: %d\n",dns_a->data_len);
 		printf("DNS access test: \n");
 		printf("---------------------\n");
 		printf("ID: %d\n", dns_h->id);
 		printf("qr_code:  %d\n", htons(dns_h->qr));
 		printf("qd_count:  %d\n", htons(dns_h->qd_count));
 		printf("rd:  %d\n", dns_h->rd);
-		sendto(serverSocket, buf, g+sizeof(answer), 0, (struct sockaddr *)&remaddr, addrlen);
+		sendto(serverSocket, buf, g+sizeof(ip), 0, (struct sockaddr *)&remaddr, addrlen);
 		printf("an_count:  %d\n", htons(dns_h->an_count));
 		printf("ns_count:  %d\n", htons(dns_h->ns_count));
 		printf("ar_count:  %d\n", htons(dns_h->ar_count));
 	//	printf("qtype:  %d\n", dns_q->qtype);
 	//	printf("dns_q qtype: %s\n", dns_q->qtype);
-
-
-
 
 //		sendto(serverSocket, buf, strlen(buf), 0, (struct sockaddr *)&remaddr, addrlen);
 	}
